@@ -1,0 +1,44 @@
+name: CI - Build and Push to ECR   # ワークフロー名（GitHub画面に表示される）
+on:                               # ワークフローの実行トリガー
+  push:                           # 「push された時」に実行
+    branches: [ main ]            # 対象ブランチは main
+  pull_request:                   # 「PR が作られた時」にも実行
+    branches: [ main ]            # 対象ブランチは main
+
+permissions:                      # 実行中のジョブに与えるGitHubリポジトリ権限
+  contents: read
+
+env:                              # 環境変数（全体で使える）
+  AWS_REGION: ap-northeast-1      # AWS東京リージョン
+  ECR_REPOSITORY: my-app          # ECRのリポジトリ名
+  IMAGE_TAG: latest               # イメージのタグ（latest固定）
+
+jobs:                             # 実行するジョブ定義（複数可）
+  build-and-push:                 # ジョブ名
+    runs-on: ubuntu-latest        # GitHubが用意するLinux環境で実行
+
+    steps:                        # ジョブ内の処理ステップ（順番に実行）
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4   # GitHubのコードをチェックアウト（ローカルに取ってくる）
+
+    - name: AWS 認証情報を設定
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::<アカウントID>:role/<GitHubActions用IAMロール名>
+        aws-region: ${{ env.AWS_REGION }}     # 上で設定した東京リージョンを使う
+
+    - name: ECR にログイン
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2   # ECRにdocker loginするアクション
+
+    - name: Docker イメージをビルド
+      run: |
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG \
+          ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+      # 1. Dockerイメージをビルド
+      # 2. ECR用のフルパス（アカウントID含む）にタグを付ける
+
+    - name: Docker イメージを ECR に Push
+      run: |
+        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
