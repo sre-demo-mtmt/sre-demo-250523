@@ -24,7 +24,7 @@ jobs:                             # 実行するジョブ定義（複数可）
     - name: AWS 認証情報を設定
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::<アカウントID>:role/<GitHubActions用IAMロール名>
+        role-to-assume: arn:aws:iam::049644709522:role/GitHubActionsPushTestRole
         aws-region: ${{ env.AWS_REGION }}     # 上で設定した東京リージョンを使う
 
     - name: ECR にログイン
