@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
   security-events: write
-  id-token: write
+  id-token: write
 
 env:
   AWS_REGION: ap-northeast-1  # 適宜変更
