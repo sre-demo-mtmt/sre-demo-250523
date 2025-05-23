@@ -30,6 +30,7 @@ jobs:
         aws-region: ${{ secrets.AWS_REGION }}
 
     - name: ECR にログイン
+      id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Docker イメージをビルド
@@ -43,7 +44,7 @@ jobs:
       with:
         image-ref: ${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         format: table
-        exit-code: 0
+        exit-code: 1
         severity: CRITICAL,HIGH
 
     - name: Docker イメージを ECR に Push
