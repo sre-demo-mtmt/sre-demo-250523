@@ -7,6 +7,8 @@ on:                               # ワークフローの実行トリガー
 
 permissions:                      # 実行中のジョブに与えるGitHubリポジトリ権限
   contents: read
+  security-events: write
+  id-token: write
 
 env:                              # 環境変数（全体で使える）
   AWS_REGION: ap-northeast-1      # AWS東京リージョン
