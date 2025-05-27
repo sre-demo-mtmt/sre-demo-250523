@@ -51,15 +51,24 @@ jobs:
       run: |
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Jenkins デプロイジョブをトリガー
+    - name: Jenkins デプロイジョブをトリガー（Crumb対応あり）
       if: github.ref == 'refs/heads/main'
       env:
-        JENKINS_URL: http://54.238.217.219:8080/job/deploy-my-app/build
+        JENKINS_URL: http://54.238.217.219:8080
+        JENKINS_JOB: deploy-my-app
         JENKINS_TOKEN: ${{ secrets.JENKINS_TRIGGER_TOKEN }}
         JENKINS_USER: ${{ secrets.JENKINS_USER }}
         JENKINS_PASS: ${{ secrets.JENKINS_PASS }}
       run: |
-        curl -X POST --user "$JENKINS_USER:$JENKINS_PASS" "$JENKINS_URL?token=$JENKINS_TOKEN"
+        # Crumb を取得
+        CRUMB=$(curl -s --user "$JENKINS_USER:$JENKINS_PASS" "$JENKINS_URL/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
+
+        echo "取得した Crumb: $CRUMB"
+
+        # Crumb を使ってジョブをトリガー
+        curl -X POST "$JENKINS_URL/job/$JENKINS_JOB/build?token=$JENKINS_TOKEN" \
+          -H "$CRUMB" \
+          --user "$JENKINS_USER:$JENKINS_PASS"
 
   codeql:
     runs-on: ubuntu-latest
