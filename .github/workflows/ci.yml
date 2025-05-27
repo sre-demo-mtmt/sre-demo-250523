@@ -51,7 +51,7 @@ jobs:
       run: |
         docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Jenkins デプロイジョブをトリガー（Crumb対応あり）
+    - name: Jenkins デプロイジョブをトリガー（Crumb対応）
       if: github.ref == 'refs/heads/main'
       env:
         JENKINS_URL: http://54.238.217.219:8080
@@ -60,15 +60,15 @@ jobs:
         JENKINS_USER: ${{ secrets.JENKINS_USER }}
         JENKINS_PASS: ${{ secrets.JENKINS_PASS }}
       run: |
-        # Crumb を取得
-        CRUMB=$(curl -s --user "$JENKINS_USER:$JENKINS_PASS" "$JENKINS_URL/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)")
+        # Crumbを取得（header名と値を分ける）
+        CRUMB=$(curl -s --user "$JENKINS_USER:$JENKINS_PASS" "$JENKINS_URL/crumbIssuer/api/json")
+        CRUMB_FIELD=$(echo "$CRUMB" | jq -r .crumbRequestField)
+        CRUMB_VALUE=$(echo "$CRUMB" | jq -r .crumb)
 
-        echo "取得した Crumb: $CRUMB"
-
-        # Crumb を使ってジョブをトリガー
+        # Jenkinsジョブをトリガー
         curl -X POST "$JENKINS_URL/job/$JENKINS_JOB/build?token=$JENKINS_TOKEN" \
-          -H "$CRUMB" \
-          --user "$JENKINS_USER:$JENKINS_PASS"
+          --user "$JENKINS_USER:$JENKINS_PASS" \
+          -H "$CRUMB_FIELD: $CRUMB_VALUE"
 
   codeql:
     runs-on: ubuntu-latest
