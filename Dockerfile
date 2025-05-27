@@ -11,5 +11,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # アプリのコードをコピー
 COPY . .
 
+# 外部公開するポート番号を指定
+EXPOSE 8080
+
 # アプリを起動
 CMD ["python", "app.py"]
