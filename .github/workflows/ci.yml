@@ -54,7 +54,7 @@ jobs:
     - name: Jenkins デプロイジョブをトリガー（Basic 認証あり）
       if: github.ref == 'refs/heads/main'
       env:
-        JENKINS_URL: http://jenkins.example.com/job/deploy-my-app/build
+        JENKINS_URL: http://54.238.217.219:8080/job/deploy-my-app/build
         JENKINS_TOKEN: ${{ secrets.JENKINS_TRIGGER_TOKEN }}
       run: |
         curl -X POST "$JENKINS_URL?token=$JENKINS_TOKEN"
